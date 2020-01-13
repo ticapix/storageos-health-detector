@@ -1,6 +1,11 @@
+<<<<<<< HEAD
 tmp/
 openrc.sh
 kubeconfig.yml
 kubectl
 storageos
 .repo_pass
+=======
+kubeconfig.yml
+openrc.sh
+>>>>>>> 7400707f2e493f3258042f36e3f8276ff5f28419
