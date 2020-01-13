@@ -1,10 +1,10 @@
-apiVersion: apps/v1
+apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
-  name: node-problem-detector
-  namespace: kube-system
   labels:
     app: node-problem-detector
+  name: node-problem-detector
+  namespace: storageos-operator
 spec:
   selector:
     matchLabels:
@@ -16,11 +16,25 @@ spec:
     spec:
       containers:
       - name: node-problem-detector
-        command:
-        - /node-problem-detector
-        - --logtostderr
-        - --system-log-monitors=/config/kernel-monitor.json,/config/docker-monitor.json
-        image: k8s.gcr.io/node-problem-detector:v0.6.3
+        image: hsodwtkx.gra5.container-registry.ovh.net/library/storageos-health-detector:0.2
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: STORAGEOS_USERNAME
+          valueFrom:
+            secretKeyRef:
+              key: apiUsername
+              name: storageos-api
+        - name: STORAGEOS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: apiPassword
+              name: storageos-api
+        - name: STORAGEOS_HOST
+          value: storageos.storageos.svc:5705
+        imagePullPolicy: Always
         resources:
           limits:
             cpu: 10m
@@ -28,45 +42,8 @@ spec:
           requests:
             cpu: 10m
             memory: 80Mi
-        imagePullPolicy: Always
-        securityContext:
-          privileged: true
-        env:
-        - name: NODE_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: spec.nodeName
-        volumeMounts:
-        - name: log
-          mountPath: /var/log
-          readOnly: true
-        - name: kmsg
-          mountPath: /dev/kmsg
-          readOnly: true
-        # Make sure node problem detector is in the same timezone
-        # with the host.
-        - name: localtime
-          mountPath: /etc/localtime
-          readOnly: true
-        - name: config
-          mountPath: /config
-          readOnly: true
-      volumes:
-      - name: log
-        # Config `log` to your system log directory
-        hostPath:
-          path: /var/log/
-      - name: kmsg
-        hostPath:
-          path: /dev/kmsg
-      - name: localtime
-        hostPath:
-          path: /etc/localtime
-      - name: config
-        configMap:
-          name: node-problem-detector-config
-          items:
-          - key: kernel-monitor.json
-            path: kernel-monitor.json
-          - key: docker-monitor.json
-            path: docker-monitor.json
+      imagePullSecrets:
+      - name: regcred
+      restartPolicy: Always
+      serviceAccount: node-problem-detector
+      serviceAccountName: node-problem-detector
