@@ -1,0 +1,6 @@
+tmp/
+openrc.sh
+kubeconfig.yml
+kubectl
+storageos
+.repo_pass
