@@ -9,3 +9,31 @@ By default, the update process is unaware of higher level of service deployed by
 To keep data consistency, the end-user must signal to the update process whether or not the node can be updated.
 
 This is the goal of this plugin.
+
+## Prepare your environment
+
+First thing is to setup your environment. I usually put all that part in a `activate` file. Edit the file according to our setting.
+
+
+```shell
+. ./activate
+```
+
+## Build the Docker image with the plugin
+
+Until it's proven to work, I used a private registry.
+
+```shell
+make docker-build
+make docker-push
+```
+
+## Deploy the service
+
+The DaemonSet can be deployer and undeployed with `make deploy` and `make undeploy`
+
+## Testing
+
+While looking at kube-apiserver event with `kubectl get events -w` in a separate terminal, try to start/stop nodes with `openstack server start|stop <node_name>` and check data consistency.
+
+
