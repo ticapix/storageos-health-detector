@@ -1,3 +1,7 @@
+Travis integration: [![Build Status](https://travis-ci.org/ticapix/storageos-health-detector.svg?branch=master)](https://travis-ci.org/ticapix/storageos-health-detector)
+
+Docker Hub: https://hub.docker.com/r/ticapix/storageos-health-detector
+
 # StorageOS plugin for [Node Problem Detector](https://github.com/kubernetes/node-problem-detector)
 
 When StorageOS is used on a managed platform such as [OVH Managed Kubernetes Service](https://www.ovh.com/world/public-cloud/kubernetes/), the end user doesn't have access the cluster node.
