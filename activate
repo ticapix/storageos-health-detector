@@ -18,12 +18,3 @@ export STORAGEOS_HOST="$STORAGE_SERVICE.$STORAGE_SERVICE_NAMESPACE.svc:$STORAGE_
 export STORAGEOS_HOST="localhost:15706"
 
 echo "to connect to storageos cluster: kubectl port-forward -n $STORAGE_SERVICE_NAMESPACE service/$STORAGE_SERVICE 15706:$STORAGE_SERVICE_PORT"
-
-export REPO_HOST="hsodwtkx.gra5.container-registry.ovh.net/library"
-export REPO_USER=JPMmtqkJoD
-export REPO_PASS=`cat .repo_pass`
-
-echo $REPO_PASS | docker login --username $REPO_USER --password-stdin $REPO_HOST
-kubectl -n storageos-operator get secret regcred || kubectl -n storageos-operator create secret docker-registry regcred --docker-server=https://hsodwtkx.gra5.container-registry.ovh.net/v2 --docker-username=$REPO_USER --docker-password=$REPO_USER
-
-echo "docker repository available at https://$REPO_HOST"

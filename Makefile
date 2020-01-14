@@ -1,15 +1,22 @@
+ROOT_DIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+NAME=$(shell basename $(ROOT_DIR))
 REPO_HOST?=ticapix
 REPO=$(REPO_HOST)/storageos-health-detector
 TAG=0.2
 
+.PHONY: help
+
 help:
-	echo "make build"
+	$(ECHO) "$(NAME)"
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m=> %s\n", $$1, $$2}'
 
 storageos:
 	curl -sSLo storageos https://github.com/storageos/go-cli/releases/download/1.2.2/storageos_linux_amd64
 	chmod +x storageos
 
-docker-build: storageos
+install: storageos
+
+docker-build: install
 	docker build -f Dockerfile -t $(REPO):master .
 	docker tag $(REPO):master $(REPO):$(TAG)
 

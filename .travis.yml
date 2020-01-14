@@ -1,0 +1,17 @@
+language: minimal
+services:
+  - docker
+env:
+  global:
+    - COMMIT=${TRAVIS_COMMIT::8}
+install:
+  - make install
+  - docker login -u $DOCKER_USER -p $DOCKER_PASS
+  - export REPO=${TRAVIS_REPO_SLUG}
+  - export TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest"; else echo $TRAVIS_BRANCH ; fi`
+script:
+  - docker build -f Dockerfile -t $REPO:$COMMIT .
+after_success:
+  - docker tag $REPO:$COMMIT $REPO:$TAG
+  - docker tag $REPO:$COMMIT $REPO:travis-$TRAVIS_BUILD_NUMBER
+  - docker push $REPO
