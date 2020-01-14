@@ -32,6 +32,8 @@ make deploy
 make undeploy
 ```
 
+*TODO: use helm instead*
+
 ## Testing
 
 While looking at kube-apiserver event with `kubectl get events -w` in a separate terminal, try to start/stop nodes with `openstack server start|stop <node_name>` and check data consistency.
