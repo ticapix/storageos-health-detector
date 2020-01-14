@@ -14,26 +14,25 @@ This is the goal of this plugin.
 
 First thing is to setup your environment. I usually put all that part in a `activate` file. Edit the file according to our setting.
 
-
 ```shell
 . ./activate
 ```
 
-## Build the Docker image with the plugin
+## Install StorageOS
 
-Until it's proven to work, I used a private registry.
-
-```shell
-make docker-build
-make docker-push
-```
+Follow the instruction here https://docs.storageos.com/docs/platforms/kubernetes/install/1.15
 
 ## Deploy the service
 
-The DaemonSet can be deployer and undeployed with `make deploy` and `make undeploy`
+The DaemonSet can be deployed and undeployed with `make`.
+
+```shell
+make deploy
+# or
+make undeploy
+```
 
 ## Testing
 
 While looking at kube-apiserver event with `kubectl get events -w` in a separate terminal, try to start/stop nodes with `openstack server start|stop <node_name>` and check data consistency.
-
 
