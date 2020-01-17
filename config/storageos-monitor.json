@@ -11,7 +11,7 @@
     "conditions": [],
     "rules": [
       {
-        "type": "temporary",
+        "type": "permanent",
         "reason": "VolumesNotHealthy",
         "path": "/config/plugin/storageos_volume_health.sh"
       }
