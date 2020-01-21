@@ -1,9 +1,13 @@
-FROM k8s.gcr.io/node-problem-detector:v0.8.0
+FROM python:3-alpine
 
-COPY config/ /config/
+#RUN apk add build-base
+
 COPY storageos /
+ENV STORAGEOS_BIN /storageos
 
-ENTRYPOINT ["/node-problem-detector", "--logtostderr", \
-    "--config.custom-plugin-monitor=/config/storageos-monitor.json", \
-    "--enable-k8s-exporter", "true", \
-    "--apiserver-wait-timeout", "30s"]
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+COPY monitor.py /
+
+ENTRYPOINT ["/monitor.py"]

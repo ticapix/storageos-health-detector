@@ -2,21 +2,25 @@ apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
   labels:
-    app: node-problem-detector
-  name: node-problem-detector
+    app: storageos-monitoring
+  name: storageos-monitoring
   namespace: storageos-operator
 spec:
   selector:
     matchLabels:
-      app: node-problem-detector
+      app: storageos-monitoring
   template:
     metadata:
       labels:
-        app: node-problem-detector
+        app: storageos-monitoring
     spec:
       containers:
-      - name: node-problem-detector
+      - name: storageos-monitoring
         image: ticapix/storageos-health-detector:latest
+        # lifecycle:
+        #   preStop:
+        #     exec:
+        #       command: ["/bin/sh","-c", "kubectl", "taint", "nodes", "$NODE_NAME", "StorageOSOnly:NoSchedule"]
         env:
         - name: NODE_NAME
           valueFrom:
@@ -35,13 +39,6 @@ spec:
         - name: STORAGEOS_HOST
           value: storageos.storageos.svc:5705
         imagePullPolicy: Always
-        resources:
-          limits:
-            cpu: 10m
-            memory: 80Mi
-          requests:
-            cpu: 10m
-            memory: 80Mi
       restartPolicy: Always
-      serviceAccount: node-problem-detector
-      serviceAccountName: node-problem-detector
+      serviceAccountName: storageos-monitoring
+      terminationGracePeriodSeconds: 3600 # 1h to copy data between nodes

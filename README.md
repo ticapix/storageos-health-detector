@@ -2,7 +2,8 @@ Travis integration: [![Build Status](https://travis-ci.org/ticapix/storageos-hea
 
 Docker Hub: https://hub.docker.com/r/ticapix/storageos-health-detector
 
-# StorageOS plugin for [Node Problem Detector](https://github.com/kubernetes/node-problem-detector)
+
+# StorageOS plugin for managed Kubernetes service
 
 When StorageOS is used on a managed platform such as [OVH Managed Kubernetes Service](https://www.ovh.com/world/public-cloud/kubernetes/), the end user doesn't have access the cluster node.
 
@@ -26,6 +27,26 @@ First thing is to setup your environment. I usually put all that part in a `acti
 
 Follow the instruction here https://docs.storageos.com/docs/platforms/kubernetes/install/1.15
 
+**Note**: you must use an external etcd
+
+or with helm
+
+```shell
+helm repo add storageos https://charts.storageos.com
+helm install \
+  --set cluster.namespace=storageos \
+  --set cluster.secretRefName=storageos-api \
+  --set cluster.kvBackend.embedded=false \
+  --set cluster.kvBackend.address=http://<ETCD_SERVER>:2379 \
+  --set cluster.kvBackend.backend=etcd \
+  --set cluster.csi.enable=true \
+  --namespace storageos-operator \
+  --name storageos \
+  storageos/storageos-operator
+```
+
+(How to install helm: https://gist.github.com/ticapix/762878ad070fcc1d164ff35fbc25b5ca)
+
 ## Deploy the service
 
 The DaemonSet can be deployed and undeployed with `make`.
@@ -37,8 +58,3 @@ make undeploy
 ```
 
 *TODO: use helm instead*
-
-## Testing
-
-While looking at kube-apiserver event with `kubectl get events -w` in a separate terminal, try to start/stop nodes with `openstack server start|stop <node_name>` and check data consistency.
-
