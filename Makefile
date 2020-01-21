@@ -34,5 +34,5 @@ undeploy: ## remove plugin from the cluster
 	kubectl delete -f setup/service-account.yaml || true
 
 watch-log:
-	kubectl -n storageos-operator logs -f `kubectl -n storageos-operator get pod -l app=node-problem-detector -o jsonpath='{.items[0].metadata.name}'`
+	kubectl -n storageos-operator logs -f `kubectl -n storageos-operator get pod -l app=storageos-monitoring -o jsonpath='{.items[0].metadata.name}'`
 	

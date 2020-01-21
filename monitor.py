@@ -6,12 +6,18 @@ import os
 import subprocess
 import json
 from urllib3.exceptions import ReadTimeoutError
+from enum import Flag, auto
 
 STORAGEOS_BIN = '/storageos'
 MANDATORY_ENV_VARS = ['NODE_NAME', 'STORAGEOS_BIN', 'STORAGEOS_USERNAME', 'STORAGEOS_PASSWORD', 'STORAGEOS_HOST']
 
 from kubernetes import client, config, watch
 
+
+class DaemonState(Flag):
+    RUNNING = auto()
+    SHOULD_CLOSE = auto()
+    MUST_CLOSE = auto()
 
 class StorageOS:
     storageos_bin = None
@@ -34,11 +40,11 @@ class StorageOS:
             time.sleep(1)
             info = self._run_json(['node', 'inspect', self.node_name])[0]
 
-    def wait_for_drain(self):
+    def wait_for_drain(self, daemon):
         self._wait_for_cordon()
         self._run(['node', 'drain', self.node_name])
         info = {'drain': False, 'volumeStats': {}}
-        while info['drain'] == False or sum([v for _, v in info['volumeStats'].items()]) != 0:
+        while (info['drain'] == False or sum([v for _, v in info['volumeStats'].items()]) != 0) and daemon.state != DaemonState.MUST_CLOSE:
             time.sleep(1)
             info = self._run_json(['node', 'inspect', self.node_name])[0]
 
@@ -61,21 +67,18 @@ class StorageOS:
         self._run(['node', 'delete', node_name])
 
 class GracefulKiller:
-    kill_now = False
-    storageos = None
-    def __init__(self, storageos):
+    state = DaemonState.RUNNING
+    def __init__(self):
         signal.signal(signal.SIGINT, self.exit_gracefully)
-        signal.signal(signal.SIGTERM, self.exit_gracefully)
-        self.storageos = storageos
+        signal.signal(signal.SIGTERM, self.start_shuting_down)
+
+    def start_shuting_down(self, signum, frame):
+        print("I should stop now.")
+        self.state = DaemonState.SHOULD_CLOSE
 
     def exit_gracefully(self, signum, frame):
-        if signum == signal.SIGINT:
-            print("I really should stop now !")
-            self.kill_now = True
-            return
-        self.storageos.wait_for_drain()
-        self.kill_now = True
-        return
+        print("I really must stop now !")
+        self.state = DaemonState.MUST_CLOSE
 
 if __name__ == '__main__':
     missing_vars = [var for var in MANDATORY_ENV_VARS if var not in os.environ]
@@ -87,14 +90,20 @@ if __name__ == '__main__':
     storageos.wait_for_uncordon()
 
     print("installing SIGINT and SIGTERM handlers")
-    killer = GracefulKiller(storageos)
+    killer = GracefulKiller()
     print("waiting to be drained ...")
 
     # Configs can be set in Configuration class directly or using helper utility
-    config.load_kube_config()
+    if 'KUBECONFIG' in os.environ:
+        print('loading config from KUBECONFIG ({})'.format(os.environ['KUBECONFIG']))
+        config.load_kube_config()
+    else:
+        print('loading config from within the cluster')
+        config.load_incluster_config()
+
     v1 = client.CoreV1Api()
     w = watch.Watch()
-    while not killer.kill_now:
+    while killer.state == DaemonState.RUNNING:
         try:
             for event in w.stream(v1.list_node, timeout_seconds=3):
                 print("Event: %s %s" % (event['type'], event['object'].metadata.name))
@@ -106,4 +115,5 @@ if __name__ == '__main__':
         except ReadTimeoutError as ex:
             pass
     w.stop()
+    storageos.wait_for_drain(killer)
     print("End of the program. I was killed gracefully :)")
